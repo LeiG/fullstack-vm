@@ -8,31 +8,30 @@ import psycopg2
 
 def connect():
     """Connect to the PostgreSQL database.  Returns a database connection."""
-    return psycopg2.connect("dbname=tournament")
+    conn = psycopg2.connect("dbname=tournament")
+    cur = conn.cursor()
+    return conn, cur
 
 
 def deleteMatches():
     """Remove all the match records from the database."""
-    conn = connect()
-    cur = conn.cursor()
-    cur.execute("DELETE FROM matches;")
+    conn, cur = connect()
+    cur.execute("TRUNCATE matches RESTART IDENTITY CASCADE;")
     conn.commit()
     conn.close()
 
 
 def deletePlayers():
     """Remove all the player records from the database."""
-    conn = connect()
-    cur = conn.cursor()
-    cur.execute("DELETE FROM players;")
+    conn, cur = connect()
+    cur.execute("TRUNCATE players RESTART IDENTITY CASCADE;")
     conn.commit()
     conn.close()
 
 
 def countPlayers():
     """Returns the number of players currently registered."""
-    conn = connect()
-    cur = conn.cursor()
+    conn, cur = connect()
     cur.execute("SELECT COUNT(*) FROM players;")
     numPlayers = cur.fetchone()[0]
     conn.commit()
@@ -50,9 +49,10 @@ def registerPlayer(name):
     Args:
       name: the player's full name (need not be unique).
     """
-    conn = connect()
-    cur = conn.cursor()
-    cur.execute("INSERT INTO players (id, name) VALUES (DEFAULT, %s)", (name,))
+    conn, cur = connect()
+    query = "INSERT INTO players (id, name) VALUES (DEFAULT, %s)"
+    params = (name,)
+    cur.execute(query, params)
     conn.commit()
     conn.close()
 
@@ -70,8 +70,7 @@ def playerStandings():
         wins: the number of matches the player has won
         matches: the number of matches the player has played
     """
-    conn = connect()
-    cur = conn.cursor()
+    conn, cur = connect()
     cur.execute("SELECT * FROM standings ORDER BY wins DESC;")
     standings = cur.fetchall()
     conn.commit()
@@ -87,12 +86,12 @@ def reportMatch(winner, loser):
       winner:  the id number of the player who won
       loser:  the id number of the player who lost
     """
-    conn = connect()
-    cur = conn.cursor()
-    cur.execute(
-        "INSERT INTO matches (id, winner_id, loser_id)"
-        "VALUES (DEFAULT, %d, %d)" % (winner, loser)
-    )
+    conn, cur = connect()
+    query = """
+    INSERT INTO matches (id, winner_id, loser_id) VALUES (DEFAULT, %s, %s)
+    """
+    params = (winner, loser)
+    cur.execute(query, params)
     conn.commit()
     conn.close()
 
@@ -114,8 +113,7 @@ def swissPairings():
     """
     player_standings = playerStandings()
 
-    conn = connect()
-    cur = conn.cursor()
+    conn, cur = connect()
     cur.execute("SELECT winner_id, loser_id FROM matches;")
     matches = set(cur.fetchall())
     conn.commit()

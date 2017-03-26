@@ -17,9 +17,9 @@ CREATE TABLE players(
 );
 
 CREATE TABLE matches(
-  id         SERIAL  UNIQUE PRIMARY KEY,
-  winner_id  INT     NOT NULL,
-  loser_id   INT     NOT NULL
+  id         SERIAL  UNIQUE    PRIMARY KEY,
+  winner_id  INT     NOT NULL  REFERENCES players(id),
+  loser_id   INT     NOT NULL  REFERENCES players(id)
 );
 
 CREATE VIEW win AS
