@@ -13,29 +13,41 @@ def connect():
     return conn, cur
 
 
+class Database():
+    def __init__(self):
+        self.conn, self.cur = connect()
+
+    def __enter__(self):
+        return self.cur
+
+    def __exit__(self, type, value, traceback):
+        self.conn.commit()
+        self.conn.close()
+
+
 def deleteMatches():
     """Remove all the match records from the database."""
-    conn, cur = connect()
-    cur.execute("TRUNCATE matches RESTART IDENTITY CASCADE;")
-    conn.commit()
-    conn.close()
+    database = Database()
+
+    with database as db:
+        db.execute("TRUNCATE matches RESTART IDENTITY CASCADE;")
 
 
 def deletePlayers():
     """Remove all the player records from the database."""
-    conn, cur = connect()
-    cur.execute("TRUNCATE players RESTART IDENTITY CASCADE;")
-    conn.commit()
-    conn.close()
+    database = Database()
+
+    with database as db:
+        db.execute("TRUNCATE players RESTART IDENTITY CASCADE;")
 
 
 def countPlayers():
     """Returns the number of players currently registered."""
-    conn, cur = connect()
-    cur.execute("SELECT COUNT(*) FROM players;")
-    numPlayers = cur.fetchone()[0]
-    conn.commit()
-    conn.close()
+    database = Database()
+
+    with database as db:
+        db.execute("SELECT COUNT(*) FROM players;")
+        numPlayers = db.fetchone()[0]
 
     return numPlayers
 
@@ -49,12 +61,12 @@ def registerPlayer(name):
     Args:
       name: the player's full name (need not be unique).
     """
-    conn, cur = connect()
-    query = "INSERT INTO players (id, name) VALUES (DEFAULT, %s)"
-    params = (name,)
-    cur.execute(query, params)
-    conn.commit()
-    conn.close()
+    database = Database()
+
+    with database as db:
+        query = "INSERT INTO players (id, name) VALUES (DEFAULT, %s)"
+        params = (name,)
+        db.execute(query, params)
 
 
 def playerStandings():
@@ -70,11 +82,11 @@ def playerStandings():
         wins: the number of matches the player has won
         matches: the number of matches the player has played
     """
-    conn, cur = connect()
-    cur.execute("SELECT * FROM standings ORDER BY wins DESC;")
-    standings = cur.fetchall()
-    conn.commit()
-    conn.close()
+    database = Database()
+
+    with database as db:
+        db.execute("SELECT * FROM standings ORDER BY wins DESC;")
+        standings = db.fetchall()
 
     return standings
 
@@ -86,14 +98,14 @@ def reportMatch(winner, loser):
       winner:  the id number of the player who won
       loser:  the id number of the player who lost
     """
-    conn, cur = connect()
-    query = """
-    INSERT INTO matches (id, winner_id, loser_id) VALUES (DEFAULT, %s, %s)
-    """
-    params = (winner, loser)
-    cur.execute(query, params)
-    conn.commit()
-    conn.close()
+    database = Database()
+
+    with database as db:
+        query = """
+        INSERT INTO matches (id, winner_id, loser_id) VALUES (DEFAULT, %s, %s)
+        """
+        params = (winner, loser)
+        db.execute(query, params)
 
 
 def swissPairings():
@@ -113,11 +125,11 @@ def swissPairings():
     """
     player_standings = playerStandings()
 
-    conn, cur = connect()
-    cur.execute("SELECT winner_id, loser_id FROM matches;")
-    matches = set(cur.fetchall())
-    conn.commit()
-    conn.close()
+    database = Database()
+
+    with database as db:
+        db.execute("SELECT winner_id, loser_id FROM matches;")
+        matches = set(db.fetchall())
 
     pairings = []
     while len(player_standings) > 0:
