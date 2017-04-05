@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <link href="static/css/bootstrap.min.css" rel="stylesheet">
+    <link href="static/css/main.css" rel="stylesheet" type="text/css">
+    <title>TIL</title>
+  </head>
+
+  <body>
+    <div class="container">
+
+      <div id="row">
+        {% block content %}
+        {% endblock %}
+      </div>
+
+      <div id="row">
+        {% block footer %}
+        &copy; Copyright 2017 by <a href="https://commitlogs.com/">Lei Gong</a>.
+        {% endblock %}
+      </div>
+
+    </div>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script src="static/js/bootstrap.min.js"></script>
+  </body>
+</html>
