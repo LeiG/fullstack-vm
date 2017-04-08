@@ -44,7 +44,7 @@ def showTopics():
     return render_template(
         'topics.html',
         all_topics=fake_data.topics,
-        latest_cards=fake_data.cards,
+        all_cards=fake_data.cards,
     )
 
 
