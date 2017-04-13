@@ -50,12 +50,16 @@ def showTopics():
 
 @app.route('/topics/new/', methods=['GET', 'POST'])
 def newTopic():
-    return render_template('new-topic.html')
+    return render_template('new-topic.html', all_topics=fake_data.topics)
 
 
 @app.route('/topics/<int:topic_id>/edit/', methods=['GET', 'POST'])
 def editTopic(topic_id):
-    return render_template('edit-topic.html')
+    return render_template(
+        'edit-topic.html',
+        all_topics=fake_data.topics,
+        topic=fake_data.topic,
+    )
 
 
 @app.route('/topics/<int:topic_id>/delete/', methods=['GET', 'POST'])
@@ -73,18 +77,28 @@ def showCards(topic_id):
     return render_template(
         'cards.html',
         all_topics=fake_data.topics,
-        all_cards=fake_data.cards,
+        topic=fake_data.topic,
+        topic_cards=fake_data.cards,
     )
 
 
 @app.route('/topics/<int:topic_id>/cards/new/')
 def newCard(topic_id):
-    return render_template('new-card.html')
+    return render_template(
+        'new-card.html',
+        all_topics=fake_data.topics,
+        topic=fake_data.topic,
+    )
 
 
 @app.route('/topics/<int:topic_id>/cards/<int:card_id>/edit/')
 def editCard(topic_id, card_id):
-    return render_template('edit-card.html')
+    return render_template(
+        'edit-card.html',
+        all_topics=fake_data.topics,
+        topic=fake_data.topic,
+        card=fake_data.card,
+    )
 
 
 @app.route('/topics/<int:topic_id>/cards/<int:card_id>/delete/')

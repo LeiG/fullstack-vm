@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+  <h2 class="page-header">{{topic.name}}</h2>
+
+  <ul class="nav">
+  {% for card in topic_cards %}
+    <li>
+      {% include "card.html" %}
+    </li>
+  {% endfor %}
+  </ul>
+
+{% endblock %}

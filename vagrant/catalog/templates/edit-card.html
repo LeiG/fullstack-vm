@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+  <h2 class="page-header">Edit Card - {{topic.name}}</h2>
+  <form class="col-sm-6 col-sm-8">
+    <div class="form-group">
+      <label for="addNewCardName">Card Name</label>
+      <input class="form-control" id="newCardName" value="{{card.name}}">
+    </div>
+    <div class="form-group">
+      <label for="addNewCardContent">Content</label>
+      <textarea class="form-control" id="newCardContent">{{card.content}}</textarea>
+    </div>
+    <button type="submit" class="btn btn-primary">Save</button>
+  </form>
+
+{% endblock %}
