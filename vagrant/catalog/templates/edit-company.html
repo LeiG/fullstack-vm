@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h2 class="page-header">Edit Company</h2>
+<form class="row" id="newCompanyRow">
+  <div class="form-group col-sm-6 col-sm-8">
+    <label for="addNewCompany">Company Name</label>
+    <input type="company" class="form-control" id="newCompany" value="{{company.name}}">
+  </div>
+  <div class="col-sm-4 col-sm-2" id="newCompanyBtn">
+    <button type="submit" class="btn btn-primary">Save</button>
+    <button type="submit" class="btn btn-default">Cancel</button>
+  </div>
+</form>
+
+{% endblock %}

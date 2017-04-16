@@ -19,8 +19,8 @@ class User(Base):
     email = Column(String(250), nullable=False)
 
 
-class Topic(Base):
-    __tablename__ = 'topic'
+class Company(Base):
+    __tablename__ = 'company'
 
     id = Column(Integer, primary_key=True)
     name = Column(String(80), nullable=False)
@@ -35,14 +35,14 @@ class Card(Base):
     content = Column(Text, nullable=False)
     created_date = Column(DateTime(timezone=True), server_default=func.now())
     updated_date = Column(DateTime(timezone=True), onupdate=func.now())
-    topic_id = Column(Integer, ForeignKey('topic.id'))
-    topic = relationship(Topic)
+    company_id = Column(Integer, ForeignKey('company.id'))
+    company = relationship(Company)
     user_id = Column(Integer, ForeignKey('user.id'))
     user = relationship(User)
 
 
 def init_db():
-    engine = create_engine('sqlite:///til.db')
+    engine = create_engine('sqlite:///techview.db')
 
     Base.metadata.create_all(engine)
 

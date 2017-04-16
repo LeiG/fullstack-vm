@@ -1,17 +1,17 @@
 # -*- coding: utf-8 -*-
 
-topic = {'id': '1', 'name': 'programming', 'created_date': '2017-01-01'}
+company = {'id': '1', 'name': 'Google', 'created_date': '2017-01-01'}
 
-topics = [
-    {'id': '1', 'name': 'programming', 'created_date': '2017-01-01'},
-    {'id': '2', 'name': 'reading', 'created_date': '2017-02-01'},
-    {'id': '3', 'name': 'workout', 'created_date': '2017-03-01'},
+companies = [
+    {'id': '1', 'name': 'Google', 'created_date': '2017-01-01'},
+    {'id': '2', 'name': 'Thumbtack', 'created_date': '2017-02-01'},
+    {'id': '3', 'name': 'Facebook', 'created_date': '2017-03-01'},
 ]
 
 card = {
     'id': '1',
-    'name': 'scala',
-    'content': 'scala is a functional programming language',
+    'name': 'Reverse binary tree',
+    'content': 'Reverse a binary tree from left to right',
     'created_at': '2017-04-01',
     'updated_at': '2017-04-02',
     'topic_id': '1',
@@ -21,8 +21,8 @@ card = {
 cards = [
     {
         'id': '1',
-        'name': 'scala',
-        'content': 'scala is a functional programming language',
+        'name': 'Reverse binary tree',
+        'content': 'Reverse a binary tree from left to right.',
         'created_at': '2017-04-01',
         'updated_at': '2017-04-02',
         'topic_id': '1',
@@ -30,8 +30,9 @@ cards = [
     },
     {
         'id': '2',
-        'name': 'python',
-        'content': 'python is a programming language',
+        'name': 'Invert binary tree',
+        'content': 'Google: 90% of our engineers use the software you wrote (Homebrew), \
+        but you can\'t invert a binary tree on a whiteboard so fuck off.',
         'created_at': '2017-04-02',
         'updated_at': '2017-04-02',
         'topic_id': '1',
@@ -39,8 +40,8 @@ cards = [
     },
     {
         'id': '3',
-        'name': 'cookbook',
-        'content': 'cookbook is great for beginners',
+        'name': 'Add two numbers',
+        'content': 'Add the two numbers and return it as a linked list.',
         'created_at': '2017-04-03',
         'updated_at': '2017-04-04',
         'topic_id': '2',

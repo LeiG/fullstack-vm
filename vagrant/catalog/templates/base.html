@@ -6,14 +6,14 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <link href="/static/css/bootstrap.min.css" rel="stylesheet">
     <link href="/static/css/main.css" rel="stylesheet" type="text/css">
-    <title>TIL</title>
+    <title>TechView</title>
   </head>
 
   <body>
     <nav class="navbar navbar-inverse navbar-fixed-top">
       <div class="container-fluid">
         <div class="navbar-header">
-          <a class="navbar-brand" href="/">Today I Learned</a>
+          <a class="navbar-brand" href="/">TechView</a>
         </div>
 
         <div id="navbar" class="navbar-collapse collapse">
@@ -32,16 +32,16 @@
         <div class="col-sm-3 col-md-2 sidebar">
           <div class="row">
             <div class="col-xs-6 col-sm-8">
-              <h4 class="sub-header">All Topics</h4>
+              <h4 class="sub-header">All Companies</h4>
             </div>
             <div class="col-xs-4 col-sm-2">
               <a href="/topics/new" class="btn btn-default" role="button">+</a>
             </div>
           </div>
           <ul class="nav nav-sidebar">
-            {% for topic in all_topics %}
+            {% for company in all_companies %}
             <li class="active">
-              <a href="#">{{topic.name}}</a>
+              <a href="#">{{company.name}}</a>
             </li>
             {% endfor %}
           </ul>
