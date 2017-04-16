@@ -65,9 +65,9 @@ def editTopic(topic_id):
 @app.route('/topics/<int:topic_id>/delete/', methods=['GET', 'POST'])
 def deleteTopic(topic_id):
     return render_template(
-        'topics.html',
+        'delete-topic.html',
         all_topics=fake_data.topics,
-        latest_cards=fake_data.cards,
+        topic=fake_data.topic,
     )
 
 
@@ -103,8 +103,11 @@ def editCard(topic_id, card_id):
 
 @app.route('/topics/<int:topic_id>/cards/<int:card_id>/delete/')
 def deleteCard(topic_id, card_id):
-    return "This is the /topics/%s/cards/%s/delete page"\
-        % (str(topic_id), str(card_id))
+    return render_template(
+        'delete-card.html',
+        all_topics=fake_data.topics,
+        card=fake_data.card,
+    )
 
 
 if __name__ == "__main__":
