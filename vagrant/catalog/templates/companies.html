@@ -2,13 +2,13 @@
 
 {% block content %}
 
-    <h2 class="page-header">Recent Cards</h2>
-    <ul class="nav">
-    {% for card in all_cards %}
-      <li>
-        {% include "card.html" %}
-      </li>
-    {% endfor %}
-    </ul>
+  <h2 class="page-header">Recent Cards</h2>
+  <ul class="nav">
+  {% for card in all_cards %}
+    <li>
+      {% include "card.html" %}
+    </li>
+  {% endfor %}
+  </ul>
 
 {% endblock %}
