@@ -4,7 +4,11 @@
 
   <script src="https://apis.google.com/js/client:platform.js?onload=start" async defer></script>
 
-  <div id="loginButton">
+  <h2 class="page-header">Login to TechView</h2>
+
+  <p>Login is super easy with your social accounts</p>
+
+  <div id="gLoginButton">
     <span class="g-signin"
       data-scope="openid"
       data-clientid="529359323394-5e1ev1hbuf2p1qh912g2djekbftpnf42.apps.googleusercontent.com"
@@ -15,13 +19,17 @@
       data-approvalprompt="force">
     </span>
   </div>
-  <div id="gconnect-result"></div>
+
+  <div id="fbLoginButton">
+  </div>
+
+  <div id="login-result"</div>
 
   <script>
    function signInCallback(authResult) {
      if (authResult['code']) {
        // Hide the sign-in button after user is authorized
-       $('#loginButton').attr('style', 'display: none');
+       $('#gLoginButton').attr('style', 'display: none');
        // Send the one-time-code to the server
        $.ajax({
          type: 'POST',
@@ -31,14 +39,15 @@
          data: authResult['code'],
          success: function(result) {
            if (result) {
-             $('#gconnect-result').html('Login Successfully!</br>' + result + '</br>Redirecting...')
+             $('#login-result').html('Login Successfully!</br>' + result + '</br>Redirecting...')
              setTimeOut(function() {
                window.location.href = "/companies";
              }, 4000);
            } else if (authResult['error']) {
              console.log('There was an error' + authResult['error']);
            } else {
-             $('#gconnect-result').html('Failed to make a server-side call. Check your configuration and console.');
+             $('#login-result')
+               .html('Failed to make a server-side call. Check your configuration and console.');
            }
          }
        });

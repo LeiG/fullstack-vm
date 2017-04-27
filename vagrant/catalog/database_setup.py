@@ -17,6 +17,7 @@ class User(Base):
     id = Column(Integer, primary_key=True)
     username = Column(String(80), nullable=False)
     email = Column(String(250), nullable=False)
+    picture = Column(String(250))
 
 
 class Company(Base):

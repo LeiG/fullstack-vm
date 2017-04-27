@@ -49,4 +49,9 @@ cards = [
     },
 ]
 
-user = {'id': '1', 'username': 'lei', 'email': 'lei@commitlogs.com'}
+user = {
+    'id': '1',
+    'username': 'lei',
+    'email': 'lei@commitlogs.com',
+    'picture': 'selfie',
+}

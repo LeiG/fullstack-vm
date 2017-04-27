@@ -7,7 +7,8 @@ import random
 import requests
 import string
 
-from flask import Flask, make_response, redirect, request, render_template, flash
+from flask import\
+    Flask, make_response, redirect, request, render_template, flash
 from flask import session as login_session
 
 from sqlalchemy import create_engine
@@ -156,11 +157,6 @@ def gdisconnect():
         )
         response.headers['Content-Type'] = 'application/json'
         return response
-
-
-@app.route('/signup/', methods=['GET', 'POST'])
-def signup():
-    return render_template('signup.html')
 
 
 @app.route('/logout/', methods=['GET', 'POST'])
