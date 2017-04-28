@@ -119,10 +119,25 @@ def gconnect():
     login_session['username'] = data['name']
     login_session['picture'] = data['picture']
     login_session['email'] = data['email']
+    login_session['source'] = 'Google'
+
+    # store user info into db
+    if session.query(User).
 
     flash('You are now logged in as %s' % login_session['username'])
 
     return
+
+
+@app.route('/logout/', methods=['GET', 'POST'])
+def logout():
+    if login_session['source'] is None:
+        response = make_response(json.dumps('Current user not logged in'), 401)
+        response.headers['Content-Type'] = 'application/json'
+        return response
+    else:
+        if login_session['source'] == 'Google':
+            return redirect('/gdisconnect/')
 
 
 @app.route('/gdisconnect/')
@@ -146,6 +161,7 @@ def gdisconnect():
         del login_session['username']
         del login_session['email']
         del login_session['picture']
+        del login_session['source']
 
         response = make_response(json.dumps('Successfully disconnected.'), 200)
         response.headers['Content-Type'] = 'application/json'
@@ -157,11 +173,6 @@ def gdisconnect():
         )
         response.headers['Content-Type'] = 'application/json'
         return response
-
-
-@app.route('/logout/', methods=['GET', 'POST'])
-def logout():
-    return "You logged out..."
 
 
 @app.route('/')
