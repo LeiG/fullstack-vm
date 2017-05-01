@@ -8,7 +8,7 @@ import requests
 import string
 
 from flask import\
-    Flask, make_response, redirect, request, render_template, flash
+    Flask, make_response, redirect, request, render_template, flash, url_for
 from flask import session as login_session
 
 from sqlalchemy import create_engine
@@ -54,7 +54,7 @@ def gconnect():
     code = request.data
     try:
         # Upgrade the authorization code into a credentials object
-        oauth_flow = flow_from_clientsecrets('client_secrets.json', scope='')
+        oauth_flow = flow_from_clientsecrets('g_client_secrets.json', scope='')
         oauth_flow.redirect_uri = 'postmessage'
         credentials = oauth_flow.step2_exchange(code)
     except FlowExchangeError:
@@ -116,28 +116,92 @@ def gconnect():
     answer = request.get(userinfo_url, params=params)
     data = json.loads(answer.text)
 
+    login_session['provider'] = 'Google'
     login_session['username'] = data['name']
     login_session['picture'] = data['picture']
     login_session['email'] = data['email']
-    login_session['source'] = 'Google'
 
     # store user info into db
-    if session.query(User).
+    # if session.query(User).
 
     flash('You are now logged in as %s' % login_session['username'])
 
-    return
+    return redirect(url_for('showCompanies'))
+
+
+@app.route('/fbconnect/', methods=['POST'])
+def fbconnect():
+    if request.args.get('state') != login_session['state']:
+        response = make_response(json.dumps('Invalid state token'), 401)
+        response.headers['Content-Type'] = 'application/json'
+        return response
+
+    access_token = request.data
+    # Exchange client token for long-lived server-side token
+    app_id = json.loads(
+        open('fb_client_secrets.json', 'r').read()
+    )['web']['app_id']
+    app_secret = json.loads(
+        open('fb_client_secrets.json', 'r').read()
+    )['web']['app_secret']
+    url = 'https://graph.facebook.com/oauth/' \
+        'access_token?grant_type=fb_exchange_token&' \
+        'client_id=%s&client_secret=%s&fb_exchange_token=%s' \
+        % (app_id, app_secret, access_token)
+    h = httplib2.Http()
+    result = h.request(url, 'GET')[1]
+
+    # Use token to get user info
+    token = result.split('&')[0]
+    userinfo_url = \
+        'https://graph.facebook.com/v2.8/me?%s&fields=name,id,email' \
+        % token
+    h = httplib2.Http()
+    result = h.request(userinfo_url, 'GET')[1]
+    data = json.loads(result)
+    login_session['provider'] = 'Facebook'
+    login_session['username'] = data['name']
+    login_session['email'] = data['email']
+    login_session['facebook_id'] = data['id']
+
+    # Get user picture
+    userpic_url = \
+        'https://graph.facebook.com/v2.8/me/picture?%s' \
+        '&redirect=0&height=200&width=200' % token
+    h = httplib2.Http()
+    result = h.request(userpic_url, 'GET')[1]
+    data = json.loads(result)
+
+    login_session['picture'] = data['data']['url']
+
+    flash('You are now logged in as %s' % login_session['username'])
+
+    return redirect(url_for('showCompanies'))
 
 
 @app.route('/logout/', methods=['GET', 'POST'])
 def logout():
-    if login_session['source'] is None:
+    if login_session['provider'] is None:
         response = make_response(json.dumps('Current user not logged in'), 401)
         response.headers['Content-Type'] = 'application/json'
         return response
     else:
-        if login_session['source'] == 'Google':
-            return redirect('/gdisconnect/')
+        if login_session['provider'] == 'Google':
+            gdisconnect()
+            del login_session['credentials']
+            del login_session['gplus_id']
+        elif login_session['provider'] == 'Facebook':
+            fbdisconnect()
+            del login_session['facebook_id']
+
+        del login_session['username']
+        del login_session['email']
+        del login_session['picture']
+        del login_session['provider']
+
+        flash('You have successfully been logged out.')
+
+        return redirect(url_for('showCompanies'))
 
 
 @app.route('/gdisconnect/')
@@ -173,6 +237,11 @@ def gdisconnect():
         )
         response.headers['Content-Type'] = 'application/json'
         return response
+
+
+@app.route('/fbdisconnect/')
+def fbdisconnect():
+    pass
 
 
 @app.route('/')

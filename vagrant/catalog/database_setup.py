@@ -18,7 +18,7 @@ class User(Base):
     username = Column(String(80), nullable=False)
     email = Column(String(250), nullable=False)
     picture = Column(String(250))
-    source = Column(String(80))
+    provider = Column(String(80))
 
 
 class Company(Base):
