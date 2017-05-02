@@ -18,9 +18,18 @@
 
         <div id="navbar" class="navbar-collapse collapse">
           <ul class="nav navbar-nav navbar-right">
-            <li>
-              <a href="/login">Login</a>
-            </li>
+            {% if not login_session.username %}
+              <li>
+                <a href="/login">Login</a>
+              </li>
+            {% else %}
+              <li>
+                {{ login_session.username }}
+              </li>
+              <li>
+                <a href="/logout">Logout</a>
+              </li>
+            {% endif %}
           </ul>
         </div>
       </div>

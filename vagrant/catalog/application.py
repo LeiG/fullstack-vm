@@ -16,6 +16,7 @@ from sqlalchemy.orm import sessionmaker
 
 from oauth2client.client import flow_from_clientsecrets, FlowExchangeError
 
+import utils
 from database_setup import Base, User, Company, Card
 import fake_data
 
@@ -122,7 +123,8 @@ def gconnect():
     login_session['email'] = data['email']
 
     # store user info into db
-    # if session.query(User).
+    if utils.get_user_id_by_email(data['email']) is None:
+        utils.create_user(login_session, session)
 
     flash('You are now logged in as %s' % login_session['username'])
 
@@ -174,6 +176,10 @@ def fbconnect():
 
     login_session['picture'] = data['data']['url']
 
+    # store user into db
+    if utils.get_user_id_by_email(data['email']) is None:
+        utils.create_user(login_session, session)
+
     flash('You are now logged in as %s' % login_session['username'])
 
     return redirect(url_for('showCompanies'))
@@ -186,13 +192,21 @@ def logout():
         response.headers['Content-Type'] = 'application/json'
         return response
     else:
-        if login_session['provider'] == 'Google':
-            gdisconnect()
+        if login_session['provider'] == 'Google' and \
+           gdisconnect()['status'] == '200':
             del login_session['credentials']
             del login_session['gplus_id']
-        elif login_session['provider'] == 'Facebook':
+        elif login_session['provider'] == 'Facebook' and \
+             fbdisconnect()['status'] == '200':
             fbdisconnect()
             del login_session['facebook_id']
+        else:
+            response = make_response(
+                json.dumps('Failed to revoke token for given user.'),
+                400,
+            )
+            response.headers['Content-Type'] = 'application/json'
+            return response
 
         del login_session['username']
         del login_session['email']
@@ -219,37 +233,33 @@ def gdisconnect():
     h = httplib2.Http()
     result = h.request(url, 'GET')[0]
 
-    if result['status'] == '200':
-        del login_session['credentials']
-        del login_session['gplus_id']
-        del login_session['username']
-        del login_session['email']
-        del login_session['picture']
-        del login_session['source']
-
-        response = make_response(json.dumps('Successfully disconnected.'), 200)
-        response.headers['Content-Type'] = 'application/json'
-        return response
-    else:
-        response = make_response(
-            json.dumps('Failed to revoke token for given user.'),
-            400,
-        )
-        response.headers['Content-Type'] = 'application/json'
-        return response
+    return result
 
 
 @app.route('/fbdisconnect/')
 def fbdisconnect():
-    pass
+    facebook_id = login_session['facebook_id']
+    if credentials is None:
+        response = make_response(json.dumps('Current user not connected'), 401)
+        response.headers['Content-Type'] = 'application/json'
+        return response
+
+    # The access token must me included to successfully logout
+    access_token = login_session['access_token']
+    url = 'https://graph.facebook.com/%s/permissions?access_token=%s' \
+          % (facebook_id, access_token)
+    h = httplib2.Http()
+    result = h.request(url, 'DELETE')[1]
+
+    return result
 
 
 @app.route('/')
 @app.route('/companies/')
 def showCompanies():
-    # all_topics = session.query(Topic).all()
-    # latest_cards =\
-    #     session.query(Card).order_by(Card.updated_date.desc()).limit(10).all()
+    all_companies = session.query(Company).all()
+    latest_cards =\
+        session.query(Card).order_by(Card.updated_date.desc()).limit(10).all()
 
     return render_template(
         'companies.html',
@@ -264,16 +274,46 @@ def newCompany():
         return redirect('/login/')
 
     if request.method == 'POST':
-        return render_template(
-            'new-company.html',
-            all_companies=fake_data.companies,
-        )
+        new_company_name = request.args.get('newCompany')
+
+        if new_company_name is None or new_company_name == '':
+            flash('Please enter a valid company name.')
+        elif session.query(Company)\
+                    .filter(name == new_company_name).count() > 0:
+            flash('%s already exists.' % new_company_name)
+        else:
+            new_company = Company(name=new_company_name)
+            session.add(new_company)
+            session.commit()
+
+            return redirect(url_for('showCompanies'))
+
+    return render_template(
+        'new-company.html',
+        all_companies=fake_data.companies,
+    )
 
 
 @app.route('/companies/<int:company_id>/edit/', methods=['GET', 'POST'])
 def editCompany(company_id):
     if 'username' not in login_session:
         return redirect('/login/')
+
+    company = utils.get_company_by_id(company_id)
+
+    if company is None:
+        flash('Company does not exist')
+        return redirect(url_for('showCompanies'))
+
+    elif request.method == 'POST':
+        new_company_name = request.args.get('newCompany')
+
+        if new_company_name is None or new_company_name == '':
+            flash('Please enter a valid company name.')
+        else:
+            company.name = new_company_name
+            session.add(company)
+            session.commit()
 
     return render_template(
         'edit-company.html',
