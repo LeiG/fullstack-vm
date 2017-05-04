@@ -21,7 +21,7 @@ from database_setup import Base, User, Company, Card
 import fake_data
 
 CLIENT_ID = json.loads(
-    open('client_secrets.json', 'r').read()
+    open('g_client_secrets.json', 'r').read()
 )['web']['client_id']
 
 app = Flask(__name__)
@@ -123,7 +123,7 @@ def gconnect():
     login_session['email'] = data['email']
 
     # store user info into db
-    if utils.get_user_id_by_email(data['email']) is None:
+    if utils.get_user_id_by_email(data['email'], session) is None:
         utils.create_user(login_session, session)
 
     flash('You are now logged in as %s' % login_session['username'])
@@ -181,7 +181,7 @@ def fbconnect():
     login_session['picture'] = data['data']['url']
 
     # store user into db
-    if utils.get_user_id_by_email(data['email']) is None:
+    if utils.get_user_id_by_email(data['email'], session) is None:
         utils.create_user(login_session, session)
 
     flash('You are now logged in as %s' % login_session['username'])
@@ -300,7 +300,7 @@ def editCompany(company_id):
         flash('You need to login to edit company.')
         return redirect('/login/')
 
-    company = utils.get_company_by_id(company_id)
+    company = utils.get_company_by_id(company_id, session)
 
     if company is None:
         flash('Company does not exist')
@@ -331,14 +331,14 @@ def deleteCompany(company_id):
         flash('You need to login to delete company.')
         return redirect('/login/')
 
-    company = utils.get_company_by_id(company_id)
+    company = utils.get_company_by_id(company_id, session)
 
     if company is None:
         flash('Company does not exist')
         return redirect(url_for('showCompanies'))
 
     elif request.method == 'POST':
-
+        pass
 
     all_companies = session.query(Company).all()
 
