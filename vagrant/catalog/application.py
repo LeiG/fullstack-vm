@@ -166,6 +166,10 @@ def fbconnect():
     login_session['email'] = data['email']
     login_session['facebook_id'] = data['id']
 
+    # The token must be stored in the login_session in order to properly logout
+    stored_token = token.split("=")[1]
+    login_session['access_token'] = stored_token
+
     # Get user picture
     userpic_url = \
         'https://graph.facebook.com/v2.8/me/picture?%s' \
@@ -196,10 +200,12 @@ def logout():
            gdisconnect()['status'] == '200':
             del login_session['credentials']
             del login_session['gplus_id']
+
         elif login_session['provider'] == 'Facebook' and \
              fbdisconnect()['status'] == '200':
-            fbdisconnect()
             del login_session['facebook_id']
+            del login_session['access_token']
+
         else:
             response = make_response(
                 json.dumps('Failed to revoke token for given user.'),
@@ -220,12 +226,7 @@ def logout():
 
 @app.route('/gdisconnect/')
 def gdisconnect():
-    # Only disconnect a connected user
     credentials = login_session.get('credentials')
-    if credentials is None:
-        response = make_response(json.dumps('Current user not connected'), 401)
-        response.headers['Content-Type'] = 'application/json'
-        return response
 
     # Execute HTTP GET request to revoke current token
     access_token = credentials.access_token
@@ -239,10 +240,6 @@ def gdisconnect():
 @app.route('/fbdisconnect/')
 def fbdisconnect():
     facebook_id = login_session['facebook_id']
-    if credentials is None:
-        response = make_response(json.dumps('Current user not connected'), 401)
-        response.headers['Content-Type'] = 'application/json'
-        return response
 
     # The access token must me included to successfully logout
     access_token = login_session['access_token']
@@ -263,14 +260,15 @@ def showCompanies():
 
     return render_template(
         'companies.html',
-        all_companies=fake_data.companies,
-        all_cards=fake_data.cards,
+        all_companies=all_companies,
+        all_cards=latest_cards,
     )
 
 
 @app.route('/companies/new/', methods=['GET', 'POST'])
 def newCompany():
     if 'username' not in login_session:
+        flash('You need to login to add company.')
         return redirect('/login/')
 
     if request.method == 'POST':
@@ -288,15 +286,18 @@ def newCompany():
 
             return redirect(url_for('showCompanies'))
 
+    all_companies = session.query(Company).all()
+
     return render_template(
         'new-company.html',
-        all_companies=fake_data.companies,
+        all_companies=all_companies,
     )
 
 
 @app.route('/companies/<int:company_id>/edit/', methods=['GET', 'POST'])
 def editCompany(company_id):
     if 'username' not in login_session:
+        flash('You need to login to edit company.')
         return redirect('/login/')
 
     company = utils.get_company_by_id(company_id)
@@ -306,7 +307,7 @@ def editCompany(company_id):
         return redirect(url_for('showCompanies'))
 
     elif request.method == 'POST':
-        new_company_name = request.args.get('newCompany')
+        new_company_name = request.form.get('newCompany')
 
         if new_company_name is None or new_company_name == '':
             flash('Please enter a valid company name.')
@@ -315,22 +316,36 @@ def editCompany(company_id):
             session.add(company)
             session.commit()
 
+    all_companies = session.query(Company).all()
+
     return render_template(
         'edit-company.html',
-        all_companies=fake_data.companies,
-        company=fake_data.company,
+        all_companies=all_companies,
+        company=company,
     )
 
 
 @app.route('/companies/<int:company_id>/delete/', methods=['GET', 'POST'])
 def deleteCompany(company_id):
     if 'username' not in login_session:
+        flash('You need to login to delete company.')
         return redirect('/login/')
+
+    company = utils.get_company_by_id(company_id)
+
+    if company is None:
+        flash('Company does not exist')
+        return redirect(url_for('showCompanies'))
+
+    elif request.method == 'POST':
+
+
+    all_companies = session.query(Company).all()
 
     return render_template(
         'delete-company.html',
-        all_companies=fake_data.companies,
-        company=fake_data.company,
+        all_companies=all_companies,
+        company=company,
     )
 
 
