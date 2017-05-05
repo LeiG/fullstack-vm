@@ -4,7 +4,6 @@
 import httplib2
 import json
 import random
-import requests
 import string
 
 from flask import\
@@ -17,7 +16,7 @@ from sqlalchemy.orm import sessionmaker
 from oauth2client.client import flow_from_clientsecrets, FlowExchangeError
 
 import utils
-from database_setup import Base, User, Company, Card
+from database_setup import Base, Company, Card
 import fake_data
 
 CLIENT_ID = json.loads(
