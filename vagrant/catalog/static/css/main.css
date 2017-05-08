@@ -5,3 +5,7 @@ body {
 #newCompanyBtn {
   margin-top: 25px;
 }
+
+#login-message {
+  color: red;
+}

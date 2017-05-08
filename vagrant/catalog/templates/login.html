@@ -25,7 +25,7 @@
     </fb:login-button>
   </div>
 
-  <div id="login-result"></div>
+  <div id="login-message">{{login-message}}</div>
 
   <script>
    function signInCallback(authResult) {
@@ -39,13 +39,15 @@
          data: authResult['code'],
          success: function(result) {
            if (result) {
+             $('#login-message')
+               .html('Login successfully. Redirecting...')
              setTimeout(function() {
                window.location.href = "/companies";
              }, 4000);
            } else if (authResult['error']) {
              console.log('There was an error' + authResult['error']);
            } else {
-             $('#login-result')
+             $('#login-message')
                .html('Failed to make a server-side call. Check your configuration and console.');
            }
          }
@@ -122,12 +124,14 @@
          contentType: 'application/octet-stream; charset=utf-8',
          success: function(result) {
            if (result) {
+             $('#login-message')
+               .html('Login successfully. Redirecting...')
              setTimeout(function() {
                window.location.href = "/companies";
              }, 4000);
            }
            else {
-             $('#login-result')
+             $('#login-message')
                .html('Failed to make a server-side call. Check your configuration and console.');
            }
          }
