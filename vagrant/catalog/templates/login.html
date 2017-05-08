@@ -30,8 +30,6 @@
   <script>
    function signInCallback(authResult) {
      if (authResult['code']) {
-       // Hide the sign-in button after user is authorized
-       $('#gLoginButton').attr('style', 'display: none');
        // Send the one-time-code to the server
        $.ajax({
          type: 'POST',
@@ -41,8 +39,7 @@
          data: authResult['code'],
          success: function(result) {
            if (result) {
-             $('#login-result').html('Login Successfully!</br>' + result + '</br>Redirecting...')
-             setTimeOut(function() {
+             setTimeout(function() {
                window.location.href = "/companies";
              }, 4000);
            } else if (authResult['error']) {
@@ -121,11 +118,10 @@
          type: 'POST',
          url: '/fbconnect?state={{STATE}}',
          procesData: false,
-         daat: access_token,
+         data: access_token,
          contentType: 'application/octet-stream; charset=utf-8',
          success: function(result) {
            if (result) {
-             $('#login-result').html('Login Successfully!</br>' + result + '</br>Redirecting...')
              setTimeout(function() {
                window.location.href = "/companies";
              }, 4000);

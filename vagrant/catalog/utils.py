@@ -5,15 +5,13 @@ from database_setup import User, Company
 
 def create_user(session, db_session):
     new_user = User(
-        name=session['username'],
+        username=session['username'],
         email=session['email'],
         picture=session['picture'],
         provider=session['provider'],
     )
     db_session.add(new_user)
     db_session.commit()
-    # user = session.query(User).filter_by(email=login_session['email']).one()
-    # return user.id
 
 
 def get_user_by_id(user_id, db_session):

@@ -3,6 +3,7 @@
 
 import httplib2
 import json
+import requests
 import random
 import string
 
@@ -40,10 +41,10 @@ def login():
     )
     session['state'] = state
 
-    return render_template('login.html')
+    return render_template('login.html', STATE=state)
 
 
-@app.route('/gconnect/', methods=['POST'])
+@app.route('/gconnect', methods=['POST'])
 def gconnect():
     if request.args.get('state') != session['state']:
         response = make_response(json.dumps('Invalid state token'), 401)
@@ -106,22 +107,24 @@ def gconnect():
         response.headers['Content-Type'] = 'application/json'
 
     # store the access token in the session for later use
-    session['credentials'] = credentials
+    session['access_token'] = credentials.access_token
     session['gplus_id'] = gplus_id
 
     # get user info
     userinfo_url = "https://www.googleapis.com/oauth2/v1/userinfo"
-    params = {'access_token': credentials.access_token, 'alt': 'json'}
-    answer = request.get(userinfo_url, params=params)
+    params = {'access_token': access_token, 'alt': 'json'}
+    answer = requests.get(userinfo_url, params=params)
     data = json.loads(answer.text)
 
     session['provider'] = 'Google'
     session['username'] = data['name']
     session['picture'] = data['picture']
-    session['email'] = data['email']
+    # email is working inconsistently for oauth2 endpoint
+    # use https://www.googleapis.com/plus/v1/people/me instead if it is needed
+    session['email'] = data.get('emails', gplus_id + "@google.com")
 
     # store user info into db
-    if utils.get_user_id_by_email(data['email'], db_session) is None:
+    if utils.get_user_id_by_email(session['email'], db_session) is None:
         utils.create_user(session, db_session)
 
     flash('You are now logged in as %s' % session['username'])
@@ -129,7 +132,7 @@ def gconnect():
     return redirect(url_for('showCompanies'))
 
 
-@app.route('/fbconnect/', methods=['POST'])
+@app.route('/fbconnect', methods=['POST'])
 def fbconnect():
     if request.args.get('state') != session['state']:
         response = make_response(json.dumps('Invalid state token'), 401)
@@ -137,6 +140,7 @@ def fbconnect():
         return response
 
     access_token = request.data
+
     # Exchange client token for long-lived server-side token
     app_id = json.loads(
         open('fb_client_secrets.json', 'r').read()
@@ -152,25 +156,29 @@ def fbconnect():
     result = h.request(url, 'GET')[1]
 
     # Use token to get user info
-    token = result.split('&')[0]
+    token = json.loads(result)['access_token']
     userinfo_url = \
-        'https://graph.facebook.com/v2.8/me?%s&fields=name,id,email' \
-        % token
+        'https://graph.facebook.com/v2.8/me?access_token=%s' \
+        '&fields=name,id,email' % token
     h = httplib2.Http()
     result = h.request(userinfo_url, 'GET')[1]
+
     data = json.loads(result)
+
     session['provider'] = 'Facebook'
     session['username'] = data['name']
-    session['email'] = data['email']
+    # email can be empty
+    # if someone signup with phone number or email is not confirmed
+    # save as uid@facebook.com to hack around
+    session['email'] = data.get('email', data['id'] + '@facebook.com')
     session['facebook_id'] = data['id']
 
     # The token must be stored in the session in order to properly logout
-    stored_token = token.split("=")[1]
-    session['access_token'] = stored_token
+    session['access_token'] = token
 
     # Get user picture
     userpic_url = \
-        'https://graph.facebook.com/v2.8/me/picture?%s' \
+        'https://graph.facebook.com/v2.8/me/picture?access_token=%s' \
         '&redirect=0&height=200&width=200' % token
     h = httplib2.Http()
     result = h.request(userpic_url, 'GET')[1]
@@ -179,7 +187,7 @@ def fbconnect():
     session['picture'] = data['data']['url']
 
     # store user into db
-    if utils.get_user_id_by_email(data['email'], db_session) is None:
+    if utils.get_user_id_by_email(session['email'], db_session) is None:
         utils.create_user(session, db_session)
 
     flash('You are now logged in as %s' % session['username'])
@@ -196,13 +204,11 @@ def logout():
     else:
         if session['provider'] == 'Google' and \
            gdisconnect()['status'] == '200':
-            del session['credentials']
             del session['gplus_id']
 
         elif session['provider'] == 'Facebook' and \
-             fbdisconnect()['status'] == '200':
+             fbdisconnect()['success'] == True:
             del session['facebook_id']
-            del session['access_token']
 
         else:
             response = make_response(
@@ -212,6 +218,7 @@ def logout():
             response.headers['Content-Type'] = 'application/json'
             return response
 
+        del session['access_token']
         del session['username']
         del session['email']
         del session['picture']
@@ -224,15 +231,14 @@ def logout():
 
 @app.route('/gdisconnect/')
 def gdisconnect():
-    credentials = session.get('credentials')
-
     # Execute HTTP GET request to revoke current token
-    access_token = credentials.access_token
-    url = 'https://accounts.google.com/o/oauth2/revoke?token%s' % access_token
+    access_token = session.get('access_token')
+    url = 'https://accounts.google.com/o/oauth2/revoke?token=%s' % access_token
     h = httplib2.Http()
-    result = h.request(url, 'GET')[0]
+    response = h.request(url, 'GET')[0]
+    print(response)
 
-    return result
+    return response
 
 
 @app.route('/fbdisconnect/')
@@ -241,10 +247,11 @@ def fbdisconnect():
 
     # The access token must me included to successfully logout
     access_token = session['access_token']
-    url = 'https://graph.facebook.com/%s/permissions?access_token=%s' \
+    url = 'https://graph.facebook.com/v2.8/%s/permissions?access_token=%s' \
           % (facebook_id, access_token)
+
     h = httplib2.Http()
-    result = h.request(url, 'DELETE')[1]
+    result = json.loads(h.request(url, 'DELETE')[1])
 
     return result
 
@@ -254,7 +261,8 @@ def fbdisconnect():
 def showCompanies():
     all_companies = db_session.query(Company).all()
     latest_cards =\
-        db_session.query(Card).order_by(Card.updated_date.desc()).limit(10).all()
+        db_session.query(Card)\
+                  .order_by(Card.updated_date.desc()).limit(10).all()
 
     return render_template(
         'companies.html',
@@ -275,7 +283,7 @@ def newCompany():
         if new_company_name is None or new_company_name == '':
             flash('Please enter a valid company name.')
         elif db_session.query(Company)\
-                    .filter(name == new_company_name).count() > 0:
+                    .filter(name==new_company_name).count() > 0:
             flash('%s already exists.' % new_company_name)
         else:
             new_company = Company(name=new_company_name)
