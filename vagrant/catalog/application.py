@@ -33,15 +33,15 @@ Base.metadata.bind = engine
 db_session = sessionmaker(bind=engine)()
 
 
-@app.route('/login/', methods=['GET', 'POST'])
-def login():
+@app.route('/login/', methods='GET')
+def login(error=None):
     state = ''.join(
         random.choice(string.ascii_uppercase + string.digits)
         for _ in xrange(32)
     )
     session['state'] = state
 
-    return render_template('login.html', STATE=state)
+    return render_template('login.html', STATE=state, error=error)
 
 
 @app.route('/gconnect', methods=['POST'])
@@ -224,8 +224,6 @@ def logout():
         del session['picture']
         del session['provider']
 
-        flash('You have successfully been logged out.')
-
         return redirect(url_for('showCompanies'))
 
 
@@ -272,19 +270,18 @@ def showCompanies():
 
 
 @app.route('/companies/new/', methods=['GET', 'POST'])
-def newCompany():
+def newCompany(error=None):
     if 'username' not in session:
-        flash('You need to login to add company.')
-        return redirect('/login/')
+        return redirect('/login?error=You need to login to add company')
 
     if request.method == 'POST':
         new_company_name = request.args.get('newCompany')
 
         if new_company_name is None or new_company_name == '':
-            flash('Please enter a valid company name.')
+            error = 'Please enter a valid company name'
         elif db_session.query(Company)\
                     .filter(name==new_company_name).count() > 0:
-            flash('%s already exists.' % new_company_name)
+            error = '%s already exists' % new_company_name
         else:
             new_company = Company(name=new_company_name)
             db_session.add(new_company)
@@ -297,26 +294,25 @@ def newCompany():
     return render_template(
         'new-company.html',
         all_companies=all_companies,
+        error=error,
     )
 
 
 @app.route('/companies/<int:company_id>/edit/', methods=['GET', 'POST'])
-def editCompany(company_id):
+def editCompany(company_id, error=None):
     if 'username' not in session:
-        flash('You need to login to edit company.')
-        return redirect('/login/')
+        return redirect('/login?error=You need to login to edit company')
 
     company = utils.get_company_by_id(company_id, db_session)
 
     if company is None:
-        flash('Company does not exist')
         return redirect(url_for('showCompanies'))
 
     elif request.method == 'POST':
         new_company_name = request.form.get('newCompany')
 
         if new_company_name is None or new_company_name == '':
-            flash('Please enter a valid company name.')
+            error = 'Please enter a valid company name'
         else:
             company.name = new_company_name
             db_session.add(company)
@@ -328,23 +324,23 @@ def editCompany(company_id):
         'edit-company.html',
         all_companies=all_companies,
         company=company,
+        error=error,
     )
 
 
 @app.route('/companies/<int:company_id>/delete/', methods=['GET', 'POST'])
-def deleteCompany(company_id):
+def deleteCompany(company_id, error=None):
     if 'username' not in session:
-        flash('You need to login to delete company.')
-        return redirect('/login/')
+        return redirect('/login?error=You need to login to delete company')
 
     company = utils.get_company_by_id(company_id, db_session)
 
     if company is None:
-        flash('Company does not exist')
         return redirect(url_for('showCompanies'))
 
     elif request.method == 'POST':
-        pass
+        if request.args.get('deleteCard'):
+
 
     all_companies = db_session.query(Company).all()
 
@@ -352,6 +348,7 @@ def deleteCompany(company_id):
         'delete-company.html',
         all_companies=all_companies,
         company=company,
+        error,
     )
 
 
@@ -369,7 +366,7 @@ def showCards(company_id):
 @app.route('/companies/<int:company_id>/cards/new/')
 def newCard(company_id):
     if 'username' not in session:
-        return redirect('/login/')
+        return redirect('/login?error=You need to login to add card')
 
     return render_template(
         'new-card.html',
@@ -381,7 +378,7 @@ def newCard(company_id):
 @app.route('/companies/<int:company_id>/cards/<int:card_id>/edit/')
 def editCard(company_id, card_id):
     if 'username' not in session:
-        return redirect('/login/')
+        return redirect('/login?error=You need to login to edit card')
 
     return render_template(
         'edit-card.html',
@@ -394,7 +391,7 @@ def editCard(company_id, card_id):
 @app.route('/companies/<int:company_id>/cards/<int:card_id>/delete/')
 def deleteCard(company_id, card_id):
     if 'username' not in session:
-        return redirect('/login/')
+        return redirect('/login?error=You need to login to delete card')
 
     return render_template(
         'delete-card.html',
