@@ -34,14 +34,14 @@ db_session = sessionmaker(bind=engine)()
 
 
 @app.route('/login/', methods='GET')
-def login(error=None):
+def login():
     state = ''.join(
         random.choice(string.ascii_uppercase + string.digits)
         for _ in xrange(32)
     )
     session['state'] = state
 
-    return render_template('login.html', STATE=state, error=error)
+    return render_template('login.html', STATE=state, error='')
 
 
 @app.route('/gconnect', methods=['POST'])
@@ -270,7 +270,7 @@ def showCompanies():
 
 
 @app.route('/companies/new/', methods=['GET', 'POST'])
-def newCompany(error=None):
+def newCompany(error=''):
     if 'username' not in session:
         return redirect('/login?error=You need to login to add company')
 
@@ -299,7 +299,7 @@ def newCompany(error=None):
 
 
 @app.route('/companies/<int:company_id>/edit/', methods=['GET', 'POST'])
-def editCompany(company_id, error=None):
+def editCompany(company_id, error=''):
     if 'username' not in session:
         return redirect('/login?error=You need to login to edit company')
 
@@ -329,7 +329,7 @@ def editCompany(company_id, error=None):
 
 
 @app.route('/companies/<int:company_id>/delete/', methods=['GET', 'POST'])
-def deleteCompany(company_id, error=None):
+def deleteCompany(company_id, error=''):
     if 'username' not in session:
         return redirect('/login?error=You need to login to delete company')
 
@@ -340,7 +340,7 @@ def deleteCompany(company_id, error=None):
 
     elif request.method == 'POST':
         if request.args.get('deleteCard'):
-
+            pass
 
     all_companies = db_session.query(Company).all()
 
@@ -348,7 +348,7 @@ def deleteCompany(company_id, error=None):
         'delete-company.html',
         all_companies=all_companies,
         company=company,
-        error,
+        error=error,
     )
 
 
