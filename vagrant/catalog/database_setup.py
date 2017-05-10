@@ -27,6 +27,8 @@ class Company(Base):
     id = Column(Integer, primary_key=True)
     name = Column(String(80), nullable=False)
     created_date = Column(DateTime(timezone=True), server_default=func.now())
+    user_id = Column(Integer, ForeignKey('user.id'))
+    user = relationship(User)
 
 
 class Card(Base):

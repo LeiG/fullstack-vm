@@ -22,10 +22,10 @@ def get_user_by_id(user_id, db_session):
         return None
 
 
-def get_user_id_by_email(email, db_session):
+def get_user_by_email(email, db_session):
     try:
         user = db_session.query(User).filter_by(email=email).one()
-        return user.id
+        return user
     except:
         return None
 

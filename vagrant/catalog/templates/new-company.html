@@ -3,13 +3,13 @@
 {% block content %}
 
   <h2 class="page-header">Add Company</h2>
-  <form class="row" id="newCompanyRow">
+  <form class="row" action="{{ url_for('newCompany') }}" method="post" id="newCompanyRow">
     <div class="form-group col-sm-6 col-sm-8">
       <label for="addNewCompany">Company Name</label>
-      <input type="company" class="form-control" id="newCompany" placeholder="Enter company name...">
+      <input type="company" class="form-control" name="newCompany" placeholder="Enter company name...">
     </div>
     <div class="col-sm-4 col-sm-2" id="newCompanyBtn">
-      <button type="submit" class="btn btn-primary">Submit</button>
+      <button type="submit" form="newCompanyRow" class="btn btn-primary">Submit</button>
     </div>
   </form>
 
