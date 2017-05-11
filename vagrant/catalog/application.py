@@ -126,7 +126,7 @@ def gconnect():
     session['email'] = data.get('emails', gplus_id + "@google.com")
 
     # store user info into db
-    if utils.get_user_id_by_email(session['email'], db_session) is None:
+    if utils.get_user_by_email(session['email'], db_session) is None:
         utils.create_user(session, db_session)
 
     flash('You are now logged in as %s' % session['username'])
@@ -274,7 +274,9 @@ def showCompanies():
 @app.route('/companies/new/', methods=['GET', 'POST'])
 def newCompany():
     if 'username' not in session:
-        return redirect(url_for('login', error='You need to login to add company'))
+        return redirect(
+            url_for('login', error='You need to login to add company')
+        )
 
     user = utils.get_user_by_email(session['email'], db_session)
 
@@ -286,7 +288,7 @@ def newCompany():
         if new_company_name is None or new_company_name == '':
             error = 'Please enter a valid company name'
         elif db_session.query(Company)\
-                    .filter(Company.name==new_company_name).count() > 0:
+                       .filter(Company.name==new_company_name).count() > 0:
             error = '%s already exists' % new_company_name
         else:
             new_company = Company(name=new_company_name, user_id=user.id)
@@ -296,7 +298,6 @@ def newCompany():
             return redirect(url_for('showCompanies'))
 
     all_companies = db_session.query(Company).all()
-
 
     return render_template(
         'new-company.html',
@@ -308,7 +309,9 @@ def newCompany():
 @app.route('/companies/<int:company_id>/edit/', methods=['GET', 'POST'])
 def editCompany(company_id):
     if 'username' not in session:
-        return redirect(url_for('login', error='You need to login to edit company'))
+        return redirect(
+            url_for('login', error='You need to login to edit company')
+        )
 
     user = utils.get_user_by_email(session['email'], db_session)
 
@@ -345,7 +348,9 @@ def editCompany(company_id):
 @app.route('/companies/<int:company_id>/delete/', methods=['GET', 'POST'])
 def deleteCompany(company_id):
     if 'username' not in session:
-        return redirect(url_for('login', error='You need to login to delete company'))
+        return redirect(
+            url_for('login', error='You need to login to delete company')
+        )
 
     user = utils.get_user_by_email(session['email'], db_session)
 
@@ -382,7 +387,7 @@ def showCards(company_id):
 
     company = utils.get_company_by_id(company_id, db_session)
 
-    cards = db_session.query(Card).filter(Company.id==company_id).all()
+    cards = db_session.query(Card).filter(Company.id == company_id).all()
 
     return render_template(
         'cards.html',
@@ -395,7 +400,9 @@ def showCards(company_id):
 @app.route('/companies/<int:company_id>/cards/new/', methods=['GET', 'POST'])
 def newCard(company_id):
     if 'username' not in session:
-        return redirect(url_for('login', error='You need to login to add card'))
+        return redirect(
+            url_for('login', error='You need to login to add card')
+        )
 
     user = utils.get_user_by_email(session['email'], db_session)
     company = utils.get_company_by_id(company_id, db_session)
@@ -407,30 +414,59 @@ def newCard(company_id):
 
     elif request.method == 'POST':
         new_card_name = request.form.get("newCardName")
-        new_card_content = request.form.get("newcardContent")
+        new_card_content = request.form.get("newCardContent")
 
-        card = Card(
-            name=new_card_name,
-            content=new_card_content,
-            company_id=company.id,
-            user_id=user.id,
-        )
-        db_session.add(card)
-        db_session.commit()
+        if new_card_name is None or new_card_name == "" \
+           or new_card_content is None or new_card_content == "":
+            error = "Please enter valid card name and content"
 
-        return redirect(url_for('showCards', company_id=company.id))
+        else:
+            card = Card(
+                name=new_card_name,
+                content=new_card_content,
+                company_id=company.id,
+                user_id=user.id,
+            )
+            db_session.add(card)
+            db_session.commit()
+
+            return redirect(url_for('showCards', company_id=company.id))
+
+    all_companies = db_session.query(Company).all()
 
     return render_template(
         'new-card.html',
-        all_companies=fake_data.companies,
-        company=fake_data.company,
+        all_companies=all_companies,
+        company=company,
+        error=error,
     )
 
 
 @app.route('/companies/<int:company_id>/cards/<int:card_id>/edit/')
 def editCard(company_id, card_id):
     if 'username' not in session:
-        return redirect('/login?error=You need to login to edit card')
+        return redirect(
+            url_for('login', error='You need to login to edit card')
+        )
+
+    user = utils.get_user_by_email(session['email'], db_session)
+    company = utils.get_company_by_id(company_id, db_session)
+    card = utils.get_card_by_id(card_id, db_session)
+
+    if company is None:
+        return redirect(url_for('showCompanies'))
+
+    elif card is None:
+        return redirect(url_for('showCards', company_id=company.id))
+
+    elif card.user_id != user.id:
+        error = "You can only edit the cards you created"
+
+    elif request.methods == 'POST':
+        pass
+
+
+    all_companies = db_session.query(Company).all()
 
     return render_template(
         'edit-card.html',

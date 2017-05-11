@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from database_setup import User, Company
+from database_setup import User, Company, Card
 
 
 def create_user(session, db_session):
@@ -34,5 +34,13 @@ def get_company_by_id(company_id, db_session):
     try:
         company = db_session.query(Company).filter_by(id=company_id).one()
         return company
+    except:
+        return None
+
+
+def get_card_by_id(card_id, db_session):
+    try:
+        card = db_session.query(Card).filter_by(id=card_id).one()
+        return card
     except:
         return None

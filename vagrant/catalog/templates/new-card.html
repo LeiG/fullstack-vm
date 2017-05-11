@@ -3,7 +3,7 @@
 {% block content %}
 
   <h2 class="page-header">Add Card - {{company.name}}</h2>
-  <form class="col-sm-6 col-sm-8" action="{{ url_for('newCard', company_id = company.id) }}}" method ="post" id="newCard">
+  <form class="col-sm-6 col-sm-8" action="{{ url_for('newCard', company_id = company.id) }}" method ="post" id="newCardRow">
     <div class="form-group">
       <label for="addNewCardName">Card Name</label>
       <input class="form-control" name="newCardName" placeholder="Enter card name...">
@@ -12,7 +12,9 @@
       <label for="addNewCardContent">Content</label>
       <textarea class="form-control" name="newCardContent" placeholder="Enter card content..."></textarea>
     </div>
-    <button type="submit" form="newCard" class="btn btn-primary">Submit</button>
+    <button type="submit" form="newCardRow" class="btn btn-primary">Submit</button>
+
+    <div id="error">{{error}}</div>
   </form>
 
 {% endblock %}
