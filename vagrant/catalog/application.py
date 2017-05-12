@@ -35,6 +35,11 @@ db_session = sessionmaker(bind=engine)()
 
 @app.route('/login/', methods=['GET'])
 def login():
+    """Login to the application
+
+    Returns:
+      on GET: page to login using social network accounts
+    """
     state = ''.join(
         random.choice(string.ascii_uppercase + string.digits)
         for _ in xrange(32)
@@ -197,8 +202,13 @@ def fbconnect():
     return redirect(url_for('showCompanies'))
 
 
-@app.route('/logout/', methods=['GET', 'POST'])
+@app.route('/logout/', methods=['GET'])
 def logout():
+    """Logout to the application
+
+    Returns
+      on GET: log out account and redirect to /companies
+    """
     if session['provider'] is None:
         response = make_response(json.dumps('Current user not logged in'), 401)
         response.headers['Content-Type'] = 'application/json'
@@ -259,6 +269,11 @@ def fbdisconnect():
 @app.route('/')
 @app.route('/companies/')
 def showCompanies():
+    """List all companies in the database
+
+    Returns
+      on GET: page that displays all companies with recent updated cards
+    """
     all_companies = db_session.query(Company).all()
     latest_cards =\
         db_session.query(Card)\
@@ -273,12 +288,20 @@ def showCompanies():
 
 @app.route('/companies/JSON')
 def companiesJSON():
+    """Return a json string containing all companies in the database
+    """
     companies = db_session.query(Company).all()
     return jsonify(Companies=[c.serialize for c in companies])
 
 
 @app.route('/companies/new/', methods=['GET', 'POST'])
 def newCompany():
+    """Add new company to the database
+
+    Returns
+      on GET: page that used to add company
+      on POST: create new company in the database and redirect to /companies
+    """
     if 'username' not in session:
         return redirect(
             url_for('login', error='You need to login to add company')
@@ -314,6 +337,12 @@ def newCompany():
 
 @app.route('/companies/<int:company_id>/edit/', methods=['GET', 'POST'])
 def editCompany(company_id):
+    """Edit company names in the database
+
+    Returns
+      on GET: page used to update company info
+      on POST: update company name in the database and redirect to /companies
+    """
     if 'username' not in session:
         return redirect(
             url_for('login', error='You need to login to edit company')
@@ -353,6 +382,12 @@ def editCompany(company_id):
 
 @app.route('/companies/<int:company_id>/delete/', methods=['GET', 'POST'])
 def deleteCompany(company_id):
+    """Delete company from database
+
+    Returns
+      on GET: page used to delete a company record
+      on POST: delete company from database and redirect to /companies
+    """
     if 'username' not in session:
         return redirect(
             url_for('login', error='You need to login to delete company')
@@ -396,6 +431,11 @@ def deleteCompany(company_id):
 @app.route('/companies/<int:company_id>/')
 @app.route('/companies/<int:company_id>/cards/')
 def showCards(company_id):
+    """List all cards for a company
+
+    Returns
+      on GET: page that displays all cards associated with a company
+    """
     all_companies = db_session.query(Company).all()
 
     company = utils.get_company_by_id(company_id, db_session)
@@ -413,6 +453,11 @@ def showCards(company_id):
 
 @app.route('/companies/<int:company_id>/cards/JSON')
 def companyCardsJson(company_id):
+    """Returns a json string with all cards info
+
+    Returns
+      on GET: a json string list all cards associated with a company
+    """
     company = utils.get_company_by_id(company_id, db_session)
 
     cards = db_session.query(Card)\
@@ -426,6 +471,12 @@ def companyCardsJson(company_id):
 
 @app.route('/companies/<int:company_id>/cards/new/', methods=['GET', 'POST'])
 def newCard(company_id):
+    """Add new card to database
+
+    Returns
+      on GET: page that add new card to a company
+      on POST: add a card to the database and redirect to /companies/company_id
+    """
     if 'username' not in session:
         return redirect(
             url_for('login', error='You need to login to add card')
@@ -472,6 +523,12 @@ def newCard(company_id):
 @app.route('/companies/<int:company_id>/cards/<int:card_id>/edit/',
            methods=['GET', 'POST'])
 def editCard(company_id, card_id):
+    """Edit card name, content and company
+
+    Returns
+      on GET: page that used to update card info
+      on POST: persist update card info to database and redirect
+    """
     if 'username' not in session:
         return redirect(
             url_for('login', error='You need to login to edit card')
@@ -527,6 +584,12 @@ def editCard(company_id, card_id):
 @app.route('/companies/<int:company_id>/cards/<int:card_id>/delete/',
            methods=['GET', 'POST'])
 def deleteCard(company_id, card_id):
+    """Delete card associated with a company
+
+    Returns
+      on GET: page that use to confirm card deletion
+      on POST: delete card record from the database and redirect
+    """
     if 'username' not in session:
         return redirect(
             url_for('login', error='You need to login to delete card')
