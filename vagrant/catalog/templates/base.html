@@ -50,7 +50,12 @@
           <ul class="nav nav-sidebar">
             {% for company in all_companies %}
             <li class="active">
-              <a href="/companies/{{company.id}}">{{company.name}}</a>
+              <div class="col-xs-6 col-sm-8">
+                <a href="/companies/{{company.id}}">{{company.name}}</a>
+              </div>
+              <div class="col-xs-4 col-sm-2">
+                <a href="/companies/{{company.id}}/edit">+</a>/<a href="/companies/{{company.id}}/delete">-</a>
+              </div>
             </li>
             {% endfor %}
           </ul>

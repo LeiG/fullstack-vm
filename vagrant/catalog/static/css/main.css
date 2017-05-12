@@ -2,6 +2,11 @@ body {
   padding-top: 70px;
 }
 
+.nav-sidebar li {
+  margin-top: 40px;
+  margin-bottom: 40px;
+}
+
 #newCompanyBtn {
   margin-top: 25px;
 }

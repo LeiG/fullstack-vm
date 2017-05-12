@@ -6,7 +6,7 @@
 <form class="row" action="{{ url_for('editCompany', company_id=company.id) }}" method="post" id="editCompanyRow">
   <div class="form-group col-sm-6 col-sm-8">
     <label for="addNewCompany">Company Name</label>
-    <input type="company" class="form-control" name="newCompany" placeholder="{{company.name}}">
+    <input type="company" class="form-control" name="newCompany" value="{{company.name}}">
   </div>
   <div class="col-sm-4 col-sm-2" id="newCompanyBtn">
     <button type="submit" form="editCompanyRow" class="btn btn-primary">Save</button>

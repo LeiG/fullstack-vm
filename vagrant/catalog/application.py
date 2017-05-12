@@ -387,7 +387,7 @@ def showCards(company_id):
 
     company = utils.get_company_by_id(company_id, db_session)
 
-    cards = db_session.query(Card).filter(Company.id == company_id).all()
+    cards = db_session.query(Card).filter(Card.company_id==company_id).all()
 
     return render_template(
         'cards.html',
@@ -442,12 +442,15 @@ def newCard(company_id):
     )
 
 
-@app.route('/companies/<int:company_id>/cards/<int:card_id>/edit/')
+@app.route('/companies/<int:company_id>/cards/<int:card_id>/edit/',
+           methods=['GET', 'POST'])
 def editCard(company_id, card_id):
     if 'username' not in session:
         return redirect(
             url_for('login', error='You need to login to edit card')
         )
+
+    error = request.args.get('error', '')
 
     user = utils.get_user_by_email(session['email'], db_session)
     company = utils.get_company_by_id(company_id, db_session)
@@ -462,29 +465,76 @@ def editCard(company_id, card_id):
     elif card.user_id != user.id:
         error = "You can only edit the cards you created"
 
-    elif request.methods == 'POST':
-        pass
+    elif request.method == 'POST':
+        new_card_name = request.form.get("newCardName")
+        new_card_content = request.form.get("newCardContent")
+        new_card_company_id = request.form.get("newCompanyId")
 
+        if new_card_name is None or new_card_name == "" \
+           or new_card_content is None or new_card_content == "":
+            error = "Please enter valid card name and content"
+
+        else:
+            card.name = new_card_name
+            card.content = new_card_content
+            card.company_id = new_card_company_id
+
+            db_session.add(card)
+            db_session.commit()
+
+            company = utils.get_company_by_id(new_card_company_id, db_session)
+
+            return redirect(url_for('showCards', company_id=card.company_id))
 
     all_companies = db_session.query(Company).all()
 
     return render_template(
         'edit-card.html',
-        all_companies=fake_data.companies,
-        company=fake_data.company,
-        card=fake_data.card,
+        all_companies=all_companies,
+        company=company,
+        card=card,
+        error=error,
     )
 
 
-@app.route('/companies/<int:company_id>/cards/<int:card_id>/delete/')
+@app.route('/companies/<int:company_id>/cards/<int:card_id>/delete/',
+           methods=['GET', 'POST'])
 def deleteCard(company_id, card_id):
     if 'username' not in session:
-        return redirect('/login?error=You need to login to delete card')
+        return redirect(
+            url_for('login', error='You need to login to delete card')
+        )
+
+    error = request.args.get('error', '')
+
+    user = utils.get_user_by_email(session['email'], db_session)
+    company = utils.get_company_by_id(company_id, db_session)
+    card = utils.get_card_by_id(card_id, db_session)
+
+    if company is None:
+        return redirect(url_for('showCompanies'))
+
+    elif card is None:
+        return redirect(url_for('showCards', company_id=company.id))
+
+    elif card.user_id != user.id:
+        error = "You can only delete the cards you created"
+
+    elif request.method == 'POST' \
+         and request.form.get('deleteCard') is not None:
+        db_session.delete(card)
+        db_session.commit()
+
+        return redirect(url_for('showCards', company_id=company.id))
+
+    all_companies = db_session.query(Company).all()
 
     return render_template(
         'delete-card.html',
-        all_companies=fake_data.companies,
-        card=fake_data.card,
+        all_companies=all_companies,
+        company=company,
+        card=card,
+        error=error,
     )
 
 

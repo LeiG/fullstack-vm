@@ -3,19 +3,19 @@
 {% block content %}
 
   <h2 class="page-header">Edit Card - {{company.name}}</h2>
-  <form class="col-sm-6 col-sm-8">
+  <form class="col-sm-6 col-sm-8" action="{{ url_for('editCard', company_id=card.company_id, card_id=card.id) }}" method="post" id="editCardRow">
     <div class="form-group">
       <label for="addNewCardName">Card Name</label>
-      <input class="form-control" id="newCardName" value="{{card.name}}">
+      <input class="form-control" name="newCardName" value="{{card.name}}">
     </div>
     <div class="form-group">
       <label for="addNewCardContent">Content</label>
-      <textarea class="form-control" id="newCardContent">{{card.content}}</textarea>
+      <textarea class="form-control" name="newCardContent">{{card.content}}</textarea>
     </div>
     <div class="form-group">
       <label for="changeTopic">Company</label>
       <br>
-      <select class="bootstrap-select">
+      <select name="newCompanyId" class="bootstrap-select">
         <option value="{{company.id}}" selected="selected">{{company.name}}</option>
         {% for c in all_companies %}
           {% if c.id != company.id %}
@@ -24,10 +24,10 @@
         {% endfor %}
       </select>
     </div>
-    <button type="submit" class="btn btn-primary">Save</button>
+    <button type="submit" form="editCardRow" class="btn btn-primary">Save</button>
     <a href="/companies/{{company.id}}" class="btn btn-default" role="button">Cancel</a>
-  </form>
 
-  <div id="error">{{error}}</div>
+    <div id="error">{{error}}</div>
+  </form>
 
 {% endblock %}
