@@ -8,7 +8,7 @@ import random
 import string
 
 from flask import\
-    Flask, make_response, redirect, request, \
+    Flask, jsonify, make_response, redirect, request, \
     render_template, flash, url_for, session
 
 from sqlalchemy import create_engine
@@ -18,7 +18,7 @@ from oauth2client.client import flow_from_clientsecrets, FlowExchangeError
 
 import utils
 from database_setup import Base, Company, Card
-import fake_data
+
 
 CLIENT_ID = json.loads(
     open('g_client_secrets.json', 'r').read()
@@ -271,6 +271,12 @@ def showCompanies():
     )
 
 
+@app.route('/companies/JSON')
+def companiesJSON():
+    companies = db_session.query(Company).all()
+    return jsonify(Companies=[c.serialize for c in companies])
+
+
 @app.route('/companies/new/', methods=['GET', 'POST'])
 def newCompany():
     if 'username' not in session:
@@ -288,7 +294,7 @@ def newCompany():
         if new_company_name is None or new_company_name == '':
             error = 'Please enter a valid company name'
         elif db_session.query(Company)\
-                       .filter(Company.name==new_company_name).count() > 0:
+                       .filter(Company.name == new_company_name).count() > 0:
             error = '%s already exists' % new_company_name
         else:
             new_company = Company(name=new_company_name, user_id=user.id)
@@ -366,8 +372,15 @@ def deleteCompany(company_id):
 
     elif request.method == 'POST':
         if request.form.get('deleteCompany'):
+            # delete associated cards
+            cards = db_session.query(Card)\
+                              .filter(Card.company_id == company.id)
+            cards.delete(synchronize_session=False)
+
+            # delete company
             db_session.delete(company)
             db_session.commit()
+
             return redirect(url_for('showCompanies'))
 
     all_companies = db_session.query(Company).all()
@@ -387,13 +400,27 @@ def showCards(company_id):
 
     company = utils.get_company_by_id(company_id, db_session)
 
-    cards = db_session.query(Card).filter(Card.company_id==company_id).all()
+    cards = db_session.query(Card)\
+                      .filter(Card.company_id == company_id).all()
 
     return render_template(
         'cards.html',
         all_companies=all_companies,
         company=company,
         company_cards=cards,
+    )
+
+
+@app.route('/companies/<int:company_id>/cards/JSON')
+def companyCardsJson(company_id):
+    company = utils.get_company_by_id(company_id, db_session)
+
+    cards = db_session.query(Card)\
+                      .filter(Card.company_id == company_id).all()
+
+    return jsonify(
+        Company=company.serialize,
+        Cards=[c.serialize for c in cards],
     )
 
 
