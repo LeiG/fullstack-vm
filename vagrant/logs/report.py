@@ -152,17 +152,28 @@ if __name__ == "__main__":
     popular_articles = getMostPopularArticles(3)
 
     print("===Top 3 Most Popular Articles===")
-    print(popular_articles)
+    printStr = ""
+    for a in popular_articles:
+        printStr += "\"{}\" - {} views".format(a[0], a[1])
+        printStr += "\n"
+    print(printStr)
     print("\n")
 
     popular_article_authors = getMostPopularArticleAuthors(4)
 
     print("===Top 4 Most Popular Article Authors===")
-    print(popular_article_authors)
+    printStr = ""
+    for a in popular_article_authors:
+        printStr += "\"{}\" - {} views".format(a[0], a[1])
+        printStr += "\n"
+    print(printStr)
     print("\n")
 
     high_error_rate_dates = getDatesWithHighErrorRate(0.01)
 
     print("===Dates with Error Rate > 1%===")
-    print(high_error_rate_dates)
+    printStr = ""
+    for d in high_error_rate_dates:
+        printStr += "\"{0}\" - {1:.2f}% errors".format(d[0], d[1])
+    print(printStr)
     print("\n")
